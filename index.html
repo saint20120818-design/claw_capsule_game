@@ -21,23 +21,36 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    html,
     body {
+      width: 100%;
+      height: 100%;
       margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 18px;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
       font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
       background:
         radial-gradient(circle at 20% 15%, rgba(255,255,255,.12), transparent 28%),
         linear-gradient(180deg, #12314b 0%, #071925 100%);
       color: #fff;
-      overflow-x: hidden;
     }
 
     .game-shell {
+      --fit-scale: 1;
+      position: absolute;
+      left: 50%;
+      top: 50%;
       width: var(--machine-w);
       text-align: center;
+      transform: translate(-50%, -50%) scale(var(--fit-scale));
+      transform-origin: center center;
+      will-change: transform;
     }
 
     .title-board {
@@ -517,6 +530,50 @@
       to { transform: scale(1) rotate(0); }
     }
 
+
+    /* 手機橫向或高度較短時，先壓縮不必要的垂直間距 */
+    @media (max-height: 760px) {
+      .title-board {
+        padding-top: 10px;
+        padding-bottom: 16px;
+      }
+
+      .title-board h1 {
+        font-size: 30px;
+      }
+
+      .machine {
+        padding-top: 30px;
+        padding-bottom: 14px;
+      }
+
+      .glass {
+        height: 350px;
+      }
+
+      .control-panel {
+        padding-top: 10px;
+      }
+
+      .message {
+        min-height: 44px;
+        font-size: 18px;
+      }
+
+      .animal-grid {
+        margin-top: 6px;
+        margin-bottom: 10px;
+      }
+
+      #playBtn {
+        min-height: 64px;
+      }
+
+      .progress {
+        margin-top: 8px;
+      }
+    }
+
     @media (max-width: 430px) {
       .machine { padding-left: 12px; padding-right: 12px; }
       .animal-grid { gap: 6px; }
@@ -781,6 +838,33 @@
       updateProgress();
     }
 
+
+    function fitGameToViewport() {
+      const shell = document.querySelector(".game-shell");
+
+      // 先恢復原始比例，取得完整內容尺寸。
+      shell.style.setProperty("--fit-scale", "1");
+
+      const safeWidth = Math.max(280, window.innerWidth - 12);
+      const safeHeight = Math.max(420, window.innerHeight - 12);
+      const contentWidth = shell.offsetWidth;
+      const contentHeight = shell.offsetHeight;
+
+      const scale = Math.min(
+        1,
+        safeWidth / contentWidth,
+        safeHeight / contentHeight
+      );
+
+      shell.style.setProperty("--fit-scale", scale.toFixed(4));
+    }
+
+    window.addEventListener("resize", fitGameToViewport);
+    window.addEventListener("orientationchange", () => {
+      setTimeout(fitGameToViewport, 150);
+    });
+    window.addEventListener("load", fitGameToViewport);
+
     playBtn.addEventListener("click", playClaw);
     resetBtn.addEventListener("click", resetGame);
     resultCard.addEventListener("click", closeResult);
@@ -788,6 +872,7 @@
 
     buildAnimalGrid();
     updateProgress();
+    requestAnimationFrame(fitGameToViewport);
   </script>
 </body>
 </html>
