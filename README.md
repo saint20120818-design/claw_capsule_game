@@ -13,3 +13,4 @@
 ## 可調整項目
 在 `index.html` 中修改 `animals` 陣列，可以更換動物名稱與 Emoji。
 `chooseAnimal()` 內的 `0.7` 是優先抽到未收集動物的機率。
+GitHub Pages deploy test
