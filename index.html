@@ -2,8 +2,8 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>動物扭蛋夾夾樂</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>扭蛋夾夾樂</title>
   <style>
     :root {
       --pink: #ff4f9b;
@@ -12,7 +12,7 @@
       --panel: #ff86b6;
       --green: #67d91f;
       --green-dark: #3baa0c;
-      --machine-w: min(92vw, 540px);
+      --machine-w: min(94vw, 500px);
     }
 
     * {
@@ -594,7 +594,7 @@
 <body>
   <main class="game-shell">
     <section class="title-board">
-      <h1>動物扭蛋夾夾樂</h1>
+      <h1>扭蛋夾夾樂</h1>
     </section>
 
     <section class="machine">
@@ -609,18 +609,7 @@
           <div class="caught-ball" id="caughtBall"></div>
         </div>
 
-        <div class="capsule-pile" aria-hidden="true">
-          <div class="ball b1"></div>
-          <div class="ball b2"></div>
-          <div class="ball b3"></div>
-          <div class="ball b4"></div>
-          <div class="ball b5"></div>
-          <div class="ball b6"></div>
-          <div class="ball b7"></div>
-          <div class="ball b8"></div>
-          <div class="ball b9"></div>
-          <div class="ball b10"></div>
-        </div>
+        <div class="capsule-pile" id="capsulePile" aria-hidden="true"></div>
 
         <div class="result-card" id="resultCard">
           <div class="result-inner">
@@ -633,7 +622,7 @@
 
       <div class="control-panel">
         <div class="message" id="message">
-          按下按鈕，蒐集全部 10 隻動物！
+          按下按鈕，夾滿這局的 10 種扭蛋！
         </div>
 
         <div class="animal-grid" id="animalGrid"></div>
@@ -651,27 +640,47 @@
   <div class="win-overlay" id="winOverlay">
     <div class="win-box">
       <h2>收集完成！</h2>
-      <div class="win-animals">🐶 🐱 🐰 🐼 🦊 🐨 🐸 🐵 🦁 🐯</div>
-      <p>恭喜你成功夾到全部動物！</p>
+      <div class="win-animals" id="winAnimals"></div>
+      <p>恭喜你夾到這局全部的扭蛋！</p>
       <button id="playAgainBtn">再玩一次</button>
     </div>
   </div>
 
   <script>
-    const animals = [
-      { id: "dog",    name: "狗狗", emoji: "🐶" },
-      { id: "cat",    name: "貓咪", emoji: "🐱" },
-      { id: "rabbit", name: "兔子", emoji: "🐰" },
-      { id: "panda",  name: "熊貓", emoji: "🐼" },
-      { id: "fox",    name: "狐狸", emoji: "🦊" },
-      { id: "koala",  name: "無尾熊", emoji: "🐨" },
-      { id: "frog",   name: "青蛙", emoji: "🐸" },
-      { id: "monkey", name: "猴子", emoji: "🐵" },
-      { id: "lion",   name: "獅子", emoji: "🦁" },
-      { id: "tiger",  name: "老虎", emoji: "🐯" }
+    // 50 種動物 + 50 種水果，每一局隨機抽 10 種來夾。
+    const ANIMAL_DATA = [
+      ["🐶","狗狗"],["🐱","貓咪"],["🐭","老鼠"],["🐹","倉鼠"],["🐰","兔子"],
+      ["🦊","狐狸"],["🐻","小熊"],["🐼","熊貓"],["🐨","無尾熊"],["🐯","老虎"],
+      ["🦁","獅子"],["🐮","乳牛"],["🐷","小豬"],["🐸","青蛙"],["🐵","猴子"],
+      ["🐔","小雞"],["🐧","企鵝"],["🐦","小鳥"],["🐤","雛鳥"],["🦆","鴨子"],
+      ["🦅","老鷹"],["🦉","貓頭鷹"],["🦇","蝙蝠"],["🐺","狼"],["🐗","山豬"],
+      ["🐴","小馬"],["🦄","獨角獸"],["🐝","蜜蜂"],["🦋","蝴蝶"],["🐌","蝸牛"],
+      ["🐞","瓢蟲"],["🐜","螞蟻"],["🦂","蠍子"],["🐢","烏龜"],["🐍","蛇"],
+      ["🦎","蜥蜴"],["🦖","暴龍"],["🦕","長頸龍"],["🐙","章魚"],["🦑","魷魚"],
+      ["🦐","蝦子"],["🦀","螃蟹"],["🐡","河豚"],["🐠","熱帶魚"],["🐬","海豚"],
+      ["🐳","鯨魚"],["🦈","鯊魚"],["🐊","鱷魚"],["🦓","斑馬"],["🦒","長頸鹿"]
     ];
 
+    const FRUIT_DATA = [
+      ["🍎","蘋果"],["🍏","青蘋果"],["🍐","梨子"],["🍊","橘子"],["🍋","檸檬"],
+      ["🍌","香蕉"],["🍉","西瓜"],["🍇","葡萄"],["🍓","草莓"],["🫐","藍莓"],
+      ["🍈","哈密瓜"],["🍒","櫻桃"],["🍑","水蜜桃"],["🥭","芒果"],["🍍","鳳梨"],
+      ["🥥","椰子"],["🥝","奇異果"],["🍅","番茄"],["🫒","橄欖"],["🥑","酪梨"],
+      ["🍊","柳丁"],["🍊","葡萄柚"],["🍊","金桔"],["🍊","椪柑"],["🍈","香瓜"],
+      ["🍈","火龍果"],["🥭","木瓜"],["🍇","荔枝"],["🍇","龍眼"],["🍇","巨峰葡萄"],
+      ["🍇","桑葚"],["🍒","蔓越莓"],["🫐","覆盆莓"],["🍓","紅莓"],["🍑","枇杷"],
+      ["🍑","油桃"],["🍐","芭樂"],["🍐","楊桃"],["🍎","富士蘋果"],["🍎","蜜蘋果"],
+      ["🍌","芭蕉"],["🍈","洋香瓜"],["🥭","百香果"],["🥭","釋迦"],["🍊","柚子"],
+      ["🍊","桶柑"],["🥥","山竹"],["🍇","提子"],["🍑","杏桃"],["🍎","海棠果"]
+    ];
+
+    const ANIMALS = ANIMAL_DATA.map(([emoji, name], i) => ({ id: "a" + i, emoji, name, type: "animal" }));
+    const FRUITS  = FRUIT_DATA.map(([emoji, name], i) => ({ id: "f" + i, emoji, name, type: "fruit" }));
+    const POOL = [...ANIMALS, ...FRUITS];
+    const TARGET_COUNT = 10;
+
     const animalGrid = document.getElementById("animalGrid");
+    const capsulePile = document.getElementById("capsulePile");
     const playBtn = document.getElementById("playBtn");
     const resetBtn = document.getElementById("resetBtn");
     const claw = document.getElementById("claw");
@@ -682,61 +691,101 @@
     const message = document.getElementById("message");
     const progress = document.getElementById("progress");
     const winOverlay = document.getElementById("winOverlay");
+    const winAnimals = document.getElementById("winAnimals");
     const playAgainBtn = document.getElementById("playAgainBtn");
 
+    let targets = [];
     let collected = new Set();
     let isPlaying = false;
     let waitingForResultClose = false;
 
-    function wait(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const shuffle = (arr) => arr
+      .map((v) => [Math.random(), v])
+      .sort((a, b) => a[0] - b[0])
+      .map((x) => x[1]);
+
+    // 從 100 種裡抽 10 種，並且同一局不出現重複的圖案（emoji）。
+    function pickTargets(n = TARGET_COUNT) {
+      const chosen = [];
+      const usedEmoji = new Set();
+      for (const item of shuffle(POOL)) {
+        if (usedEmoji.has(item.emoji)) continue;
+        usedEmoji.add(item.emoji);
+        chosen.push(item);
+        if (chosen.length === n) break;
+      }
+      return chosen;
+    }
+
+    const CAPSULE_COLORS = [
+      "#9b42ef", "#3bbcff", "#37d44c", "#ffd736", "#ff694e", "#49dea8",
+      "#35bdf4", "#ff851c", "#ef4f7d", "#ffe743", "#8a5cff", "#ff5aa0"
+    ];
+
+    function randomCapsuleColor() {
+      return CAPSULE_COLORS[Math.floor(Math.random() * CAPSULE_COLORS.length)];
+    }
+
+    // 隨機生成一堆扭蛋，位置、大小、旋轉都亂一點，看起來像自然堆疊。
+    function buildCapsulePile() {
+      capsulePile.innerHTML = "";
+      const count = 14;
+      const colors = shuffle(CAPSULE_COLORS);
+      for (let k = 0; k < count; k++) {
+        const ball = document.createElement("div");
+        ball.className = "ball";
+        const size = 58 + Math.random() * 40;          // 58–98px
+        const left = 1 + Math.random() * 72;           // 1–73%
+        const bottom = Math.pow(Math.random(), 1.6) * 50; // 偏下方堆疊 0–50%
+        const rot = Math.random() * 28 - 14;           // -14°–14°
+        ball.style.width = size.toFixed(0) + "px";
+        ball.style.left = left.toFixed(1) + "%";
+        ball.style.bottom = bottom.toFixed(1) + "%";
+        ball.style.transform = "rotate(" + rot.toFixed(1) + "deg)";
+        ball.style.background = colors[k % colors.length];
+        ball.style.zIndex = String(Math.round(50 - bottom)); // 越下面越靠前
+        capsulePile.appendChild(ball);
+      }
     }
 
     function buildAnimalGrid() {
       animalGrid.innerHTML = "";
-      animals.forEach(animal => {
+      targets.forEach((item) => {
         const slot = document.createElement("div");
         slot.className = "animal-slot";
-        slot.id = `slot-${animal.id}`;
-        slot.title = animal.name;
-        slot.textContent = animal.emoji;
+        slot.id = "slot-" + item.id;
+        slot.title = item.name;
+        slot.textContent = item.emoji;
         animalGrid.appendChild(slot);
       });
     }
 
     function updateProgress() {
-      progress.textContent = `已收集 ${collected.size} / ${animals.length}`;
-      playBtn.textContent = collected.size === animals.length
+      progress.textContent = "已收集 " + collected.size + " / " + targets.length;
+      playBtn.textContent = collected.size === targets.length
         ? "全部完成"
-        : `開始夾取（${animals.length - collected.size} 隻未收集）`;
+        : "開始夾取（還差 " + (targets.length - collected.size) + " 種）";
     }
 
-    function randomCapsuleColor() {
-      const colors = ["#ff8a23", "#3cc8ff", "#45d964", "#ff4f89", "#a34cec", "#ffe137"];
-      return colors[Math.floor(Math.random() * colors.length)];
-    }
-
-    function chooseAnimal() {
-      // 70% 機率優先抽到尚未收集的動物，避免遊戲拖太久。
-      const remaining = animals.filter(a => !collected.has(a.id));
-
+    function chooseTarget() {
+      // 70% 機率優先抽尚未收集到的，避免一直重複、拖太久。
+      const remaining = targets.filter((t) => !collected.has(t.id));
       if (remaining.length > 0 && Math.random() < 0.7) {
         return remaining[Math.floor(Math.random() * remaining.length)];
       }
-
-      return animals[Math.floor(Math.random() * animals.length)];
+      return targets[Math.floor(Math.random() * targets.length)];
     }
 
     async function playClaw() {
-      if (isPlaying || waitingForResultClose || collected.size === animals.length) return;
+      if (isPlaying || waitingForResultClose || collected.size === targets.length) return;
 
       isPlaying = true;
       playBtn.disabled = true;
       resetBtn.disabled = true;
       message.textContent = "爪子移動中…";
 
-      // 先決定本次抽到的動物，但等爪子回到原位後才公布。
-      const animal = chooseAnimal();
+      const item = chooseTarget();
 
       // 1. 水平移動到中央
       claw.classList.add("behind");
@@ -744,16 +793,16 @@
       claw.style.marginLeft = "-43px";
       await wait(850);
 
-      // 2. 爪子在扭蛋堆後方向下移動
+      // 2. 在扭蛋堆後方向下移動
       message.textContent = "爪子正在扭蛋後方下降…";
       claw.classList.add("drop");
       await wait(850);
 
-      // 3. 在扭蛋堆後方閉合爪子
+      // 3. 閉合爪子
       claw.classList.add("closed");
       await wait(350);
 
-      // 4. 顯示被夾住的扭蛋，並讓爪子移到扭蛋前方開始上升
+      // 4. 顯示夾住的扭蛋，爪子移到前方開始上升
       caughtBall.style.background = randomCapsuleColor();
       caughtBall.classList.add("visible");
       claw.classList.remove("behind");
@@ -765,26 +814,26 @@
       message.textContent = "成功夾起扭蛋，正在返回原位…";
       await wait(1100);
 
-      // 5. 爪子先水平返回左上方原位
+      // 5. 水平返回原位
       claw.style.left = "8%";
       claw.style.marginLeft = "0";
       await wait(850);
 
-      // 6. 回到原位後，扭蛋消失並公布結果
+      // 6. 公布結果
       caughtBall.classList.remove("visible");
       await wait(220);
 
-      resultEmoji.textContent = animal.emoji;
-      resultName.textContent = animal.name;
+      resultEmoji.textContent = item.emoji;
+      resultName.textContent = item.name;
 
-      const isNew = !collected.has(animal.id);
-
+      const isNew = !collected.has(item.id);
       if (isNew) {
-        collected.add(animal.id);
-        document.getElementById(`slot-${animal.id}`).classList.add("active");
-        message.textContent = `獲得新動物：${animal.name}！`;
+        collected.add(item.id);
+        const slot = document.getElementById("slot-" + item.id);
+        if (slot) slot.classList.add("active");
+        message.textContent = "獲得新扭蛋：" + item.name + "！";
       } else {
-        message.textContent = `又夾到 ${animal.name}，再接再厲！`;
+        message.textContent = "又夾到 " + item.name + "，再接再厲！";
       }
 
       updateProgress();
@@ -806,24 +855,26 @@
 
       resetBtn.disabled = false;
 
-      if (collected.size === animals.length) {
+      if (collected.size === targets.length) {
         playBtn.disabled = true;
-        message.textContent = "全部動物都已經收集完成！";
+        message.textContent = "這一局的 10 種扭蛋都夾到了！";
+        if (winAnimals) winAnimals.textContent = targets.map((t) => t.emoji).join(" ");
         setTimeout(() => winOverlay.classList.add("show"), 350);
       } else {
         playBtn.disabled = false;
-        message.textContent = "繼續按下按鈕，收集剩下的動物！";
+        message.textContent = "繼續按下按鈕，收集剩下的扭蛋！";
       }
     }
 
-    function resetGame() {
+    // 開新的一局：重新抽 10 種、重新洗扭蛋堆。
+    function newRound() {
       collected.clear();
       isPlaying = false;
       waitingForResultClose = false;
 
-      document.querySelectorAll(".animal-slot").forEach(slot => {
-        slot.classList.remove("active");
-      });
+      targets = pickTargets();
+      buildAnimalGrid();
+      buildCapsulePile();
 
       claw.classList.remove("drop", "closed", "returning", "holding", "behind");
       claw.style.left = "8%";
@@ -834,45 +885,42 @@
 
       playBtn.disabled = false;
       resetBtn.disabled = false;
-      message.textContent = "按下按鈕，蒐集全部 10 隻動物！";
+      message.textContent = "按下按鈕，夾滿這局的 10 種扭蛋！";
       updateProgress();
+      requestAnimationFrame(fitGameToViewport);
     }
-
 
     function fitGameToViewport() {
       const shell = document.querySelector(".game-shell");
-
-      // 先恢復原始比例，取得完整內容尺寸。
       shell.style.setProperty("--fit-scale", "1");
 
-      const safeWidth = Math.max(280, window.innerWidth - 12);
-      const safeHeight = Math.max(420, window.innerHeight - 12);
-      const contentWidth = shell.offsetWidth;
-      const contentHeight = shell.offsetHeight;
+      const vw = (window.visualViewport && window.visualViewport.width) || window.innerWidth;
+      const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      const safeWidth = Math.max(280, vw - 12);
+      const safeHeight = Math.max(420, vh - 12);
 
       const scale = Math.min(
         1,
-        safeWidth / contentWidth,
-        safeHeight / contentHeight
+        safeWidth / shell.offsetWidth,
+        safeHeight / shell.offsetHeight
       );
-
       shell.style.setProperty("--fit-scale", scale.toFixed(4));
     }
 
     window.addEventListener("resize", fitGameToViewport);
-    window.addEventListener("orientationchange", () => {
-      setTimeout(fitGameToViewport, 150);
-    });
+    window.addEventListener("orientationchange", () => setTimeout(fitGameToViewport, 150));
     window.addEventListener("load", fitGameToViewport);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", fitGameToViewport);
+    }
 
     playBtn.addEventListener("click", playClaw);
-    resetBtn.addEventListener("click", resetGame);
+    resetBtn.addEventListener("click", newRound);
     resultCard.addEventListener("click", closeResult);
-    playAgainBtn.addEventListener("click", resetGame);
+    playAgainBtn.addEventListener("click", newRound);
 
-    buildAnimalGrid();
-    updateProgress();
-    requestAnimationFrame(fitGameToViewport);
+    // 初始化第一局
+    newRound();
   </script>
 </body>
 </html>
